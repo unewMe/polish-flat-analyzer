@@ -1,0 +1,11 @@
+# created by virtualenv automatically
+*.json
+../project/fetch/*
+./etc/*
+./Lib/*
+./Scripts/*
+./share/*
+pyvenv.cfg
+
+__pycache__/
+*.pyc
