@@ -1,5 +1,8 @@
 import pandas as pd
 import json
+from .location_measure import get_distance_to_city_center
+
+EXCEPT_PARAMS = ['Cena za m²']
 
 
 def read_data(file_path: str) -> pd.DataFrame | None:
@@ -7,26 +10,34 @@ def read_data(file_path: str) -> pd.DataFrame | None:
         with open(file_path, "r", encoding="utf-8") as file:
             data = json.load(file)
 
-        processed_data = []
+        rd_data = []
         for offer in data:
             offer_params = offer.get('params', [])
             location = offer.get('location', {})
+            map = offer.get('map', {})
             temp_dict = {}
-            temp_dict['Location'] = location.get('city', {}).get('name', None)
+            temp_dict['City'] = location.get('city', {}).get('name', None)
             for param in offer_params:
                 if param['key'] == 'price':
                     temp_dict[param['name']] = param['value']['value']
                 else:
                     temp_dict[param['name']] = param['value'].get('key', None)
 
-            processed_data.append(temp_dict)
+            temp_dict = {k: v for k, v in temp_dict.items() if k not in EXCEPT_PARAMS}
 
-        processed_data = pd.DataFrame(processed_data)
-        processed_data.rename(
-            columns={'Powierzchnia': 'Area', 'Liczba pokoi': 'Rooms', 'Rynek': 'Market', 'Poziom': 'Floor',
+            temp_dict['Distance to city center'] = get_distance_to_city_center(city=temp_dict['City'],
+                                                                               lat=map.get('lat', None),
+                                                                               lon=map.get('lon', None))
+
+            rd_data.append(temp_dict)
+
+        rd_data = pd.DataFrame(rd_data)
+        rd_data.rename(
+            columns={'City': 'City', 'Powierzchnia': 'Area', 'Liczba pokoi': 'Rooms', 'Rynek': 'Market',
+                     'Poziom': 'Floor',
                      'Rodzaj zabudowy': 'Building type', 'Umeblowane': 'Furnished', 'Cena': 'Price',
-                     'Cena za m²': 'Price per m'}, inplace=True)
-        return processed_data
+                     'Distance to city center': 'Distance to city center'}, inplace=True)
+        return rd_data
 
     except FileNotFoundError:
         print(f"File {file_path} not found.")
@@ -34,7 +45,5 @@ def read_data(file_path: str) -> pd.DataFrame | None:
 
 
 if __name__ == '__main__':
-    df = read_data('../../data/Warszawa.json')
-    df = df['Rynek'].unique()
-    df = list(df)
+    df = read_data('../../data/data.json')
     print(df)
