@@ -1,4 +1,5 @@
 import pandas as pd
+from project.src.process_data import Preprocessor
 
 # Description: Filters out unrealistic data from the list of listings.
 
@@ -26,3 +27,8 @@ def is_realistic(listing):
 
 def filter_data(data: pd.DataFrame) -> pd.DataFrame:
     return data[data.apply(is_realistic, axis=1)]
+
+
+def filter_preprocessor(preprocessor: Preprocessor) -> None:
+    filtered_data = filter_data(preprocessor.decode_data(preprocessor.preprocessed_data))
+    preprocessor.preprocessed_data = preprocessor.encode_data(filtered_data)

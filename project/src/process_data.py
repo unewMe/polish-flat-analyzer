@@ -1,56 +1,78 @@
+import re
+
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
-from dataclasses import dataclass
+from sklearn.preprocessing import OneHotEncoder
+from dataclasses import dataclass, field
 
 
 @dataclass
 class Preprocessor:
     data: pd.DataFrame
     preprocessed_data: pd.DataFrame | None = None
-    furnished_mapping = {}
-    room_mapping = {}
-    development_mapping = {}
-    market_mapping = {}
-    city_mapping = {}
+    encoders: dict = field(default_factory=dict)
+    room_mapping = {'one': 1, 'two': 2, 'three': 3, 'four': 4}
+    reverse_room_mapping = {1: 'one', 2: 'two', 3: 'three', 4: 'four'}
 
     def __post_init__(self):
+        self.encoders = {
+            'Furnished': OneHotEncoder(sparse_output=False),
+            'Building type': OneHotEncoder(sparse_output=False),
+            'Market': OneHotEncoder(sparse_output=False),
+            'City': OneHotEncoder(sparse_output=False)
+        }
         self.preprocessed_data = self.preprocess_data(self.data)
 
     def preprocess_data(self, df):
+        df['Floor'] = df['Floor'].apply(lambda x: re.sub(r'\D', '', str(x)) if isinstance(x, str) else x)
+        df['Floor'] = pd.to_numeric(df['Floor'], errors='coerce')
 
-        df['Floor'] = df['Floor'].apply(lambda x: int(x.replace('floor_', '')) if isinstance(x, str) else -1).astype(int)
+        # Fill NaN values in 'Floor' column with a default value, e.g., 0
+        df['Floor'] = df['Floor'].fillna(0).astype(int)
+        df['Rooms'] = df['Rooms'].map(self.room_mapping).astype(int)
+        df['Area'] = pd.to_numeric(df['Area'], errors='coerce')
 
-        le_furnished = LabelEncoder()
-        df['Furnished'] = le_furnished.fit_transform(df['Furnished'])
-        self.furnished_mapping = dict(zip(le_furnished.classes_, le_furnished.transform(le_furnished.classes_)))
-
-        le_rooms = LabelEncoder()
-        df['Rooms'] = le_rooms.fit_transform(df['Rooms'])
-        self.room_mapping = dict(zip(le_rooms.classes_, le_rooms.transform(le_rooms.classes_)))
-
-        le_building = LabelEncoder()
-        df['Building type'] = le_building.fit_transform(df['Building type'])
-        self.development_mapping = dict(zip(le_building.classes_, le_building.transform(le_building.classes_)))
-
-        le_market = LabelEncoder()
-        df['Market'] = le_market.fit_transform(df['Market'])
-        self.market_mapping = dict(zip(le_market.classes_, le_market.transform(le_market.classes_)))
-
-        le_city = LabelEncoder()
-        df['City'] = le_city.fit_transform(df['City'])
-        self.city_mapping = dict(zip(le_city.classes_, le_city.transform(le_city.classes_)))
-
-        for col in df.columns:
-            if df[col].dtype == 'object':
-                df[col] = pd.to_numeric(df[col], errors='coerce')
+        for column, encoder in self.encoders.items():
+            df[column] = df[column].astype(str)
+            encoder.fit(df[[column]])
+            encoded = encoder.transform(df[[column]])
+            df = df.drop(column, axis=1).join(pd.DataFrame(encoded, columns=encoder.get_feature_names_out([column])))
 
         return df
 
     def cast_input(self, input_data: pd.DataFrame):
-        input_data['Furnished'] = input_data['Furnished'].map(self.furnished_mapping)
-        input_data['Building type'] = input_data['Building type'].map(self.development_mapping)
-        input_data['Market'] = input_data['Market'].map(self.market_mapping)
-        input_data['Rooms'] = input_data['Rooms'].map(self.room_mapping)
-        input_data['City'] = input_data['City'].map(self.city_mapping)
+        input_data['Rooms'] = input_data['Rooms'].map(self.room_mapping).astype(int)
+
+        for column, encoder in self.encoders.items():
+            encoded = encoder.transform(input_data[[column]])
+            input_data = input_data.drop(column, axis=1).join(
+                pd.DataFrame(encoded, columns=encoder.get_feature_names_out([column])))
 
         return input_data
+
+    def encode_data(self, df):
+        df['Rooms'] = df['Rooms'].map(self.room_mapping).astype(int)
+
+        for column, encoder in self.encoders.items():
+            df[column] = df[column].astype(str)
+            encoded = encoder.transform(df[[column]])
+            df = df.drop(column, axis=1).join(pd.DataFrame(encoded, columns=encoder.get_feature_names_out([column])))
+
+        return df
+
+    def decode_data(self, df):
+        for column, encoder in self.encoders.items():
+            encoded_columns = encoder.get_feature_names_out([column])
+            for i, col in enumerate(encoded_columns):
+                df.loc[df[col] == 1, column] = encoder.categories_[0][i]
+            df = df.drop(columns=encoded_columns)
+
+        df['Rooms'] = df['Rooms'].map(self.reverse_room_mapping)
+        return df
+
+    def encode_single_value(self, column, value):
+        encoder = self.encoders[column]
+        return encoder.transform([[value]]).tolist()[0]
+
+    def decode_single_value(self, column, encoded_value):
+        encoder = self.encoders[column]
+        return encoder.inverse_transform([encoded_value]).tolist()[0][0]
