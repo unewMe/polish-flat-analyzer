@@ -21,14 +21,15 @@ def is_realistic(listing):
     floor = listing['Floor']
 
     return (min_price <= price <= max_price and
-            min_area <= area <= max_area and floor >= min_floor and listing[
+            min_area <= area <= max_area and int(floor) >= min_floor and listing[
                 'Distance to city center'] <= distance_to_city_center)
 
 
 def filter_data(data: pd.DataFrame) -> pd.DataFrame:
-    return data[data.apply(is_realistic, axis=1)]
+    new_data = data[data.apply(is_realistic, axis=1)]
+    return new_data.dropna()
 
 
 def filter_preprocessor(preprocessor: Preprocessor) -> None:
-    filtered_data = filter_data(preprocessor.decode_data(preprocessor.preprocessed_data))
+    filtered_data = filter_data(preprocessor.decode_data(preprocessor.preprocessed_data.copy()))
     preprocessor.preprocessed_data = preprocessor.encode_data(filtered_data)
