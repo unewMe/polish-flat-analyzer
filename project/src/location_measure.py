@@ -1,24 +1,23 @@
 import math
 
-city_center_coordinates = {"Warszawa": {"lat": 52.231816, "lon": 21.006259},
-                           "Wrocław": {"lat": 51.108443, "lon": 17.040535},
-                           "Kraków": {"lat": 50.061683, "lon": 19.937348},
-                           "Poznań": {"lat": 52.408493, "lon": 16.933593},
-                           "Gdańsk": {"lat": 54.349658, "lon": 18.648023},
-                           "Szczecin": {"lat": 53.432707, "lon": 14.548514},
-
-                           "Łódź": {"lat": 51.759445, "lon": 19.457216},
-                           "Lublin": {"lat": 51.246452, "lon": 22.568445},
-                           "Katowice": {"lat": 50.264892, "lon": 19.023782},
-                           "Białystok": {"lat": 53.132488, "lon": 23.168840},
-                           "Bydgoszcz": {"lat": 53.123482, "lon": 18.008438},
-                           "Olsztyn": {"lat": 53.778422, "lon": 20.480119},
-                           "Rzeszów": {"lat": 50.041187, "lon": 21.999121},
-                           "Toruń": {"lat": 53.013790, "lon": 18.598444},
-                           "Opole": {"lat": 50.675015, "lon": 17.921297},
-                           "Kielce": {"lat": 50.866077, "lon": 20.628567},
-                           "Gorzów Wielkopolski": {"lat": 52.736819, "lon": 15.228507},
-                           "Zielona Góra": {"lat": 51.935621, "lon": 15.506186}}
+city_center_coordinates = {"Warszawa": {"lat": 52.231816, "lon": 21.006259}, # Pałac Kultury i Nauki
+                           "Wrocław": {"lat": 51.108443, "lon": 17.040535}, # Galeria Dominikańska
+                           "Kraków": {"lat": 50.061683, "lon": 19.937348}, # Sukiennice
+                           "Poznań": {"lat": 52.408493, "lon": 16.933593}, # Studnia Bamberki
+                           "Gdańsk": {"lat": 54.349658, "lon": 18.648023}, # Brama złota
+                           "Szczecin": {"lat": 53.432707, "lon": 14.548514}, # Plac Grunwaldzki
+                           "Łódź": {"lat": 51.761094, "lon": 19.463935}, # Kościół Najświętszego Imienia Jezus
+                           "Lublin": {"lat": 51.248378, "lon": 22.559637}, # Plac Litewski
+                           "Katowice": {"lat": 50.266107, "lon": 19.025328}, # Spodek Arena
+                           "Białystok": {"lat": 53.132380, "lon": 23.158759}, # Ratusz na Rynku Kościuszki
+                           "Bydgoszcz": {"lat": 53.122208, "lon": 17.999969}, # Zegar z czasem bydgoskim
+                           "Olsztyn": {"lat": 53.777718, "lon": 20.474720}, # Zamek Kapituły Warmińskiej
+                           "Rzeszów": {"lat": 50.037354, "lon": 22.004939}, # Pomnik Tadeusza Kościuszki
+                           "Toruń": {"lat": 53.010504, "lon": 18.604116}, # Ratusz Staromiejski
+                           "Opole": {"lat": 50.668627, "lon": 17.922295}, # Ratusz na rynku
+                           "Kielce": {"lat": 50.869147, "lon": 20.627467}, # Pałac Biskupów Krakowskich
+                           "Gorzów Wielkopolski": {"lat": 52.731107, "lon": 15.239115}, # Katedra na starym rynku
+                           "Zielona Góra": {"lat": 51.938263, "lon": 15.505311}} # Ratusz na starym rynku
 
 
 def get_distance_to_city_center(city, lat, lon):

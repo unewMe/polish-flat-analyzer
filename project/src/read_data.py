@@ -32,11 +32,14 @@ def read_data(file_path: str) -> pd.DataFrame | None:
             rd_data.append(temp_dict)
 
         rd_data = pd.DataFrame(rd_data)
+        rd_data = rd_data.dropna()
         rd_data.rename(
             columns={'City': 'City', 'Powierzchnia': 'Area', 'Liczba pokoi': 'Rooms', 'Rynek': 'Market',
                      'Poziom': 'Floor',
                      'Rodzaj zabudowy': 'Building type', 'Umeblowane': 'Furnished', 'Cena': 'Price',
                      'Distance to city center': 'Distance to city center'}, inplace=True)
+        rd_data['Area'] = rd_data['Area'].astype(float)
+
         return rd_data
 
     except FileNotFoundError:

@@ -1,4 +1,6 @@
 import pandas as pd
+from matplotlib import pyplot as plt
+import seaborn as sns
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
@@ -91,3 +93,66 @@ class HousingPricePredictor:
                 mae_city = mean_absolute_error(self.y_test[city_mask], y_pred_city)
                 results[city] = mae_city
         return results
+
+    def is_occasional(self,price, city=None, floor=None, furnished=None, market=None,
+                      building_type=None, area=None, rooms=None, distance_to_city_center=None):
+
+        predicted_price = self.predict_price(city=city, floor=floor, furnished=furnished, market=market,building_type=building_type, area=area, rooms=rooms, distance_to_city_center=distance_to_city_center)
+        return price <= predicted_price - self.evaluate_model()
+
+    def plot_feature_importance(self):
+        feature_importances = self.model.feature_importances_
+        feature_names = self.numerical_features + list(
+            self.preprocessor.encoder.get_feature_names_out(self.categorical_features))
+        sorted_idx = feature_importances.argsort()
+
+        plt.figure(figsize=(10, 8))
+        plt.barh(range(len(sorted_idx)), feature_importances[sorted_idx], align='center')
+        plt.yticks(range(len(sorted_idx)), [feature_names[i] for i in sorted_idx])
+        plt.xlabel('Ważność cechy')
+        plt.title('Ważność cech w modelu')
+        plt.show()
+
+    def plot_actual_vs_predicted_by_city(self):
+        decoded_test_data = self.preprocessor.decode_data(self.X_test.copy())
+        y_pred = self.model.predict(self.X_test)
+
+        for city in self.data['City'].unique():
+            city_mask = decoded_test_data['City'] == city
+            if city_mask.any():
+                plt.figure(figsize=(10, 8))
+                plt.scatter(self.y_test[city_mask], y_pred[city_mask], alpha=0.3)
+                plt.plot([self.y_test[city_mask].min(), self.y_test[city_mask].max()],
+                         [self.y_test[city_mask].min(), self.y_test[city_mask].max()], 'k--', lw=2)
+                plt.xlabel('Rzeczywiste ceny')
+                plt.ylabel('Przewidywane ceny')
+                plt.title(f'Rzeczywiste vs Przewidywane ceny - {city}')
+                plt.show()
+
+    def plot_residuals_by_city(self):
+        decoded_test_data = self.preprocessor.decode_data(self.X_test.copy())
+        y_pred = self.model.predict(self.X_test)
+
+        for city in self.data['City'].unique():
+            city_mask = decoded_test_data['City'] == city
+            if city_mask.any():
+                residuals = self.y_test[city_mask] - y_pred[city_mask]
+                plt.figure(figsize=(10, 8))
+                sns.histplot(residuals, kde=True)
+                plt.xlabel('Reszty')
+                plt.ylabel('Częstość')
+                plt.title(f'Rozkład reszt - {city}')
+                plt.show()
+
+    def plot_mae_by_city(self):
+        mae_by_city = self.evaluate_model_by_city()
+        plt.figure(figsize=(10, 8))
+        sns.barplot(x=list(mae_by_city.keys()), y=list(mae_by_city.values()))
+        plt.xlabel('Miasto')
+        plt.ylabel('Średni błąd absolutny (MAE)')
+        plt.title('Średni błąd absolutny (MAE) dla każdego miasta')
+        plt.xticks(rotation=45)
+        plt.show()
+
+
+
