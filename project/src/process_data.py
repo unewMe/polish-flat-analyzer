@@ -22,6 +22,7 @@ class Preprocessor:
         self.preprocessed_data = self.preprocess_data(self.data)
 
     def preprocess_data(self, df):
+        """Preprocesses the data by encoding categorical features."""
         df = df.copy()
 
         df['Floor'] = df['Floor'].apply(
@@ -41,6 +42,7 @@ class Preprocessor:
         return df
 
     def cast_input(self, input_data: pd.DataFrame):
+        """Casts the input data to the same format as the preprocessed data."""
         input_data = input_data.copy()
         for column, encoder in self.encoders.items():
             input_data[column] = input_data[column].astype(str)
@@ -50,6 +52,7 @@ class Preprocessor:
         return input_data
 
     def encode_data(self, df):
+        """Encodes the categorical features of the data."""
         df = df.copy()
         for column in self.mappings.keys():
             if column.endswith('_reverse'):
@@ -63,6 +66,7 @@ class Preprocessor:
         return df
 
     def decode_data(self, df):
+        """Decodes the categorical features of the data."""
         df = df.copy()
         for column, encoder in self.encoders.items():
             feature_names = self.mappings[column]['feature_names']
@@ -75,10 +79,12 @@ class Preprocessor:
         return df
 
     def encode_single_value(self, column, value):
+        """Encodes a single value of a categorical feature."""
         encoder = self.encoders[column]
         return encoder.transform([[value]]).tolist()[0]
 
     def decode_single_value(self, column, encoded_value):
+        """Decodes a single value of a categorical feature."""
         feature_names = self.mappings[column]['feature_names']
         categories = self.mappings[column]['categories']
         encoded_series = pd.Series(encoded_value, index=feature_names)

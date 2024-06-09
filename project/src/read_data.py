@@ -6,6 +6,7 @@ EXCEPT_PARAMS = ['Cena za m²']
 
 
 def read_data(file_path: str) -> pd.DataFrame | None:
+    """Reads the data from the json file and returns it as a DataFrame. Also calculates the distance to the city center and drops the unnecessary columns."""
     try:
         with open(file_path, "r", encoding="utf-8") as file:
             data = json.load(file)
